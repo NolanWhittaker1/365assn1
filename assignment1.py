@@ -3,7 +3,6 @@ import numpy as np
 import wave
 from PIL import Image, ImageTk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
 from tkinter import *   
 
 layout = [
@@ -22,6 +21,7 @@ def read_wav(file_path):
         audio_data = np.frombuffer(audio_data, dtype=np.int16)
 
         channel1 = audio_data[::wav_file.getnchannels()]
+        channel2 = audio_data[1::wav_file.getnchannels()]
         chan1 = np.array(channel1)
 
         top = Tk()
@@ -35,19 +35,18 @@ def read_wav(file_path):
             x2 = (i + 1) * 1000 / len(normalized_chan1)
             y2 = normalized_chan1[i + 1] * 500 
             line = C.create_line(x1, y1, x2, y2)
+        line =  C.create_line(0,0,(len(normalized_chan1)) * 1000 / len(normalized_chan1), 0)
 
         C.configure(scrollregion=(0, 0, 1000, 500))
-
+        C.pack()
 
         layout1 = [
             [sg.Text(".wav Plot")],
             [sg.Text("Sample No.:" + str(wav_file.getnframes()))],
             [sg.Text("Sample Freq.:" + str(wav_file.getframerate()))],
-            [sg.Canvas(size=(1000, 500), key="-CANVAS1-")],
             [sg.Button("Back")]
         ]
-        window1 = sg.Window(".wav Display + Graph,", layout1, finalize=True, size=(2200, 800))
-        draw_figure(window1['-CANVAS1-'],C)
+        window1 = sg.Window(".wav Display + Graph,", layout1, finalize=True)
 
         while True:
             event, values = window1.read()
@@ -55,12 +54,6 @@ def read_wav(file_path):
                 break
 
         window1.close()
-        
-def draw_figure(canvas, figure):
-    figure_canvas_agg = FigureCanvasTkAgg(figure, master=canvas)
-    figure_canvas_agg.draw()
-    figure_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
-    return figure_canvas_agg
 
 def read_tif(file_path):
     im = Image.open(file_path)
