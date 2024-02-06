@@ -23,22 +23,34 @@ def read_wav(file_path):
         channel1 = audio_data[::wav_file.getnchannels()]
         channel2 = audio_data[1::wav_file.getnchannels()]
         chan1 = np.array(channel1)
+        chan2 = np.array(channel2)
 
         top = Tk()
         normalized_chan1 = (chan1 - np.min(chan1)) / (np.max(chan1) - np.min(chan1))
+        normalized_chan2 = (chan2 - np.min(chan2)) / (np.max(chan2) - np.min(chan2))
+        min_length = min(len(normalized_chan1), len(normalized_chan2))
+        C = Canvas(top, bg="black", height=1000, width=1000)
 
-        C = Canvas(top, bg="blue", height=500, width=1000)
+        for i in range(min_length - 1):
+            x1 = i * 1000 / min_length
+            y1 = normalized_chan1[i] * 300 + 100
+            x2 = (i + 1) * 1000 / min_length
+            y2 = normalized_chan1[i + 1] * 300 + 100
+            line = C.create_line(x1, y1, x2, y2, fill="red")
 
-        for i in range(len(normalized_chan1) - 1):
-            x1 = i * 1000 / len(normalized_chan1)
-            y1 = normalized_chan1[i] * 500 
-            x2 = (i + 1) * 1000 / len(normalized_chan1)
-            y2 = normalized_chan1[i + 1] * 500 
-            line = C.create_line(x1, y1, x2, y2)
-        line =  C.create_line(0,0,(len(normalized_chan1)) * 1000 / len(normalized_chan1), 0)
-
-        C.configure(scrollregion=(0, 0, 1000, 500))
+        
+        for i in range(min_length - 1):
+            x1 = i * 1000 / min_length
+            y1 = normalized_chan2[i] * 300 + 500 
+            x2 = (i + 1) * 1000 / min_length
+            y2 = normalized_chan2[i + 1] * 300 + 500
+            line = C.create_line(x1, y1, x2, y2, fill="blue")
+        
+        C.create_text(50, 50, anchor=W, text="Channel 1 is red", fill="red")
+        C.create_text(50, 70, anchor=W, text="Channel 2 is blue", fill="blue")
+        
         C.pack()
+        top.title("Left")
 
         layout1 = [
             [sg.Text(".wav Plot")],
