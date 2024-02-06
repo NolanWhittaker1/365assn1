@@ -1,11 +1,10 @@
-import PySimpleGUI as sg #
+import PySimpleGUI as sg 
 import numpy as np
 import matplotlib.pyplot as plt
 import wave
-from PIL import Image
+from PIL import Image, ImageTk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-# GUI Definition
 layout = [
     [sg.Text("Welcome to the .wav and .tiif reader: \n")],
     [sg.Text("Input File:"), sg.Input(key="-IN-"), sg.FileBrowse(file_types=(("Wav Files", "*.wav*"),))],
@@ -24,11 +23,12 @@ def read_wav(file_path):
         
         channel1 = audio_data[::wav_file.getnchannels()]
         channel2 = audio_data[1::wav_file.getnchannels()] 
+        
         print("Channel 1: ", channel1)
         print("Channel 2: ", channel2)
         for i in range(len(channel1)-1):
-            plt.plot([i, i+1], [channel1[i], channel1[i+1]], linestyle='-', marker=".", color='b')
-            plt.plot([i, i+1], [channel2[i], channel2[i+1]], linestyle='-', marker=".", color='r')
+            plt.plot([i, i+1], [channel1[i], channel1[i+1]], linestyle='-',  color='b')
+            plt.plot([i, i+1], [channel2[i], channel2[i+1]], linestyle='-',  color='r')
         plt.xlabel('Sample No.')
         plt.ylabel('Amplitude')
         
@@ -36,14 +36,13 @@ def read_wav(file_path):
             [sg.Text(".wav Plot")],
             [sg.Text("Sample No.:" + str(wav_file.getnframes()))],
              [sg.Text("Sample Freq.:" + str(wav_file.getframerate()))],
-            [sg.Canvas(key="-CANVAS1-", background_color='white')],
-            [sg.Exit()]
+            [sg.Canvas(key="-CANVAS1-", background_color='white')]
         ]
         
         window1 = sg.Window(".wav Display + Graph,", layout1, finalize=True, size=(1000, 800))
         draw_figure(window1['-CANVAS1-'], plt.gcf())
         while True:
-            event, values = window.read()
+            event, values = window1.read()
             if event == sg.WINDOW_CLOSED or event == 'Exit':
                 break
 
@@ -58,10 +57,31 @@ def draw_figure(canvas, figure):
 
 def read_tif(file_path):
     im = Image.open(file_path)
-    imarray = np.array(im)
-    imarray.shape
-    im.show()
-    return "block"
+    layout2 = [
+        [sg.Text(".tiff ")],
+        [sg.Text("Current File Path: " + file_path)],
+        [sg.Text("Select new file:"), sg.Input(key="-INIMG-"), sg.FileBrowse(), sg.Button("Go")],
+        [sg.Image(key='IMAGE')], 
+        [sg.Button("Exit")]
+    ]
+
+    window2 = sg.Window(".tif Image displayer", layout2, finalize=True)
+    image = ImageTk.PhotoImage(image=im)
+    window2['IMAGE'].update(data=image)
+    window2.finalize()
+    while True:
+        event, values = window2.read()
+
+        if event in (sg.WINDOW_CLOSED, "Exit"):
+            break
+
+        if event == "Go":
+            input_file_path = values["-INIMG-"]
+            im = Image.open(input_file_path) 
+            image = ImageTk.PhotoImage(image=im)
+            window2['IMAGE'].update(data=image)
+
+    window2.close()
 
 
 
