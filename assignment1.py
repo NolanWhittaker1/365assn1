@@ -1,16 +1,16 @@
 import PySimpleGUI as sg 
 import numpy as np
-import matplotlib.pyplot as plt
 import wave
 from PIL import Image, ImageTk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from tkinter import *   
 
 layout = [
     [sg.Text("Welcome to the .wav and .tiif reader: \n")],
     [sg.Text("Input File:"), sg.Input(key="-IN-"), sg.FileBrowse(file_types=(("Wav Files", "*.wav*"),))],
     [sg.Exit(), sg.Button("Go")]
 ]
-
 def read_wav(file_path):
     with wave.open(file_path, 'rb') as wav_file:
         print("File Data:")
@@ -20,37 +20,44 @@ def read_wav(file_path):
         print("Number of Frames: " + str(wav_file.getnframes()))
         audio_data = wav_file.readframes(wav_file.getnframes())
         audio_data = np.frombuffer(audio_data, dtype=np.int16)
-        
+
         channel1 = audio_data[::wav_file.getnchannels()]
-        channel2 = audio_data[1::wav_file.getnchannels()] 
-        
-        print("Channel 1: ", channel1)
-        print("Channel 2: ", channel2)
-        for i in range(len(channel1)-1):
-            plt.plot([i, i+1], [channel1[i], channel1[i+1]], linestyle='-',  color='b')
-            plt.plot([i, i+1], [channel2[i], channel2[i+1]], linestyle='-',  color='r')
-        plt.xlabel('Sample No.')
-        plt.ylabel('Amplitude')
-        
+        chan1 = np.array(channel1)
+
+        top = Tk()
+        normalized_chan1 = (chan1 - np.min(chan1)) / (np.max(chan1) - np.min(chan1))
+
+        C = Canvas(top, bg="blue", height=500, width=1000)
+
+        for i in range(len(normalized_chan1) - 1):
+            x1 = i * 1000 / len(normalized_chan1)
+            y1 = normalized_chan1[i] * 500 
+            x2 = (i + 1) * 1000 / len(normalized_chan1)
+            y2 = normalized_chan1[i + 1] * 500 
+            line = C.create_line(x1, y1, x2, y2)
+
+        C.configure(scrollregion=(0, 0, 1000, 500))
+
+
         layout1 = [
             [sg.Text(".wav Plot")],
             [sg.Text("Sample No.:" + str(wav_file.getnframes()))],
-             [sg.Text("Sample Freq.:" + str(wav_file.getframerate()))],
-            [sg.Canvas(key="-CANVAS1-", background_color='white')]
+            [sg.Text("Sample Freq.:" + str(wav_file.getframerate()))],
+            [sg.Canvas(size=(1000, 500), key="-CANVAS1-")],
+            [sg.Button("Back")]
         ]
-        
-        window1 = sg.Window(".wav Display + Graph,", layout1, finalize=True, size=(1000, 800))
-        draw_figure(window1['-CANVAS1-'], plt.gcf())
+        window1 = sg.Window(".wav Display + Graph,", layout1, finalize=True, size=(2200, 800))
+        draw_figure(window1['-CANVAS1-'],C)
+
         while True:
             event, values = window1.read()
-            if event == sg.WINDOW_CLOSED or event == 'Exit':
+            if event == sg.WINDOW_CLOSED or event == 'Back':
                 break
 
-        window.close()
-        
+        window1.close()
         
 def draw_figure(canvas, figure):
-    figure_canvas_agg = FigureCanvasTkAgg(figure, canvas.Widget)
+    figure_canvas_agg = FigureCanvasTkAgg(figure, master=canvas)
     figure_canvas_agg.draw()
     figure_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
     return figure_canvas_agg
