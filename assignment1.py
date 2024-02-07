@@ -60,21 +60,25 @@ def read_wav(file_path):
                 break
 
         window1.close()
-
+window2 = None
 def read_tif(file_path):
+    global window2
+
     im = PIL.Image.open(file_path)
     layout2 = [
         [sg.Text(".tiff ")],
-        [sg.Text("Current File Path: " + file_path)],
+        [sg.Text("Current File Path:"), sg.Text(key="-INFILE-")],
         [sg.Text("Select new file:"), sg.Input(key="-INIMG-"), sg.FileBrowse(), sg.Button("Go")],
         [sg.Image(key='IMAGE')], 
         [sg.Button("Exit")]
     ]
 
     window2 = sg.Window(".tif Image displayer", layout2, finalize=True)
+    window2['-INFILE-'].update(file_path)  # Update the initial file path text
     image = ImageTk.PhotoImage(image=im)
     window2['IMAGE'].update(data=image)
     window2.finalize()
+
     while True:
         event, values = window2.read()
 
@@ -85,6 +89,7 @@ def read_tif(file_path):
             input_file_path = values["-INIMG-"]
             im = PIL.Image.open(input_file_path)
             image = ImageTk.PhotoImage(image=im)
+            window2['-INFILE-'].update(input_file_path)
             window2['IMAGE'].update(data=image)
 
     window2.close()
